@@ -1,0 +1,9 @@
+query laptopFetch{
+  description: "Dynamic query to fetch the individual laptop order informtaion of a specific laptop that customer ordered: $orderId"
+  statement: SELECT org.asm.uk.LaptopOrder WHERE (orderId ==_$orderId)
+}
+
+query laptopDetailsFetch{
+  description: "Dynamic query to fetch the individual laptop Details informtaion of a specific laptop that customer has in possesion or has ordered: $LapId"
+  statement: SELECT org.asm.uk.LaptopDetail WHERE (LapId ==_$LapId)
+}

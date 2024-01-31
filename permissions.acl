@@ -1,0 +1,237 @@
+rule ACCOUNTANTViewThemself{
+  description: "Accountant can View Themself"
+  participant(p): "org.asm.uk.Accountant"
+  operation: READ
+  resource(r): "org.asm.uk.Accountant"
+  condition: (p.getIdentifier()==r.getIdentifier())
+  action: ALLOW
+}
+
+rule AccountantcanViewALLTX {
+  description: "Accountant can read all tx for audit"
+  participant(t): "org.asm.uk.Accountant"
+  operation: READ
+  resource(v): "org.hyperledger.composer.system.HistorianRecord"
+  condition: (v.participantInvoking.getIdentifier() != t.getIdentifier())
+  action: ALLOW
+}
+
+//FOR CEO
+
+rule CEOViewThemself{
+  description: "CEO can View Themself"
+  participant(p): "org.asm.uk.CEO"
+  operation: READ
+  resource(r): "org.asm.uk.CEO"
+  condition: (p.getIdentifier()==r.getIdentifier())
+  action: ALLOW
+}
+rule CEOcanViewALLTX {
+  description: "CEO can view all tx"
+  participant(t): "org.asm.uk.CEO"
+  operation: CREATE, READ, DELETE
+  resource(v): "org.hyperledger.composer.system.HistorianRecord"
+  condition: (v.participantInvoking.getIdentifier() != t.getIdentifier())
+  action: ALLOW
+}
+rule CEOCanManipulateEverything{
+  description: "CEO has full access to everything"
+  participant: "org.asm.uk.CEO"
+  operation: CREATE, UPDATE, READ, DELETE
+  resource: "org.asm.uk.*"
+  action: ALLOW
+}
+
+//FOR MANAGER
+rule ManagerViewThemself{
+  description: "Manager can View Themself"
+  participant(p): "org.asm.uk.Manager"
+  operation: READ
+  resource(r): "org.asm.uk.Manager"
+  condition: (p.getIdentifier()==r.getIdentifier())
+  action: ALLOW
+}
+
+rule ManagerManipulateLaptopOrders{
+  description: "Manager Manipulates LaptopOrders"
+  participant: "org.asm.uk.Manager"
+  operation: CREATE, READ,UPDATE
+  resource: "org.asm.uk.LaptopOrder"
+  action: ALLOW
+}
+rule ManagerManipulateLaptopDetail{
+  description: "Manager Manipulates LaptopDetail"
+  participant: "org.asm.uk.Manager"
+  operation: CREATE, READ,UPDATE
+  resource: "org.asm.uk.LaptopDetail"
+  action: ALLOW
+}
+rule ManagerConfigLaptopTX{
+  description: "Manager access configure laptop tx/ OPTIONAL in a scenario"
+  participant: "org.asm.uk.Manager"
+  operation: CREATE, READ
+  resource: "org.asm.uk.configureOrder"
+  action: ALLOW
+}
+rule ManagerDispatchesOrder{
+  description: "Manager disptaches laptop transaction"
+  participant: "org.asm.uk.Manager"
+  operation: CREATE, READ ,UPDATE
+  resource: "org.asm.uk.dispatchOrder"
+  action: ALLOW
+}
+rule ManagerApprovesLaptopTX{
+  description: "manager laptop approval transaction"
+  participant: "org.asm.uk.Manager"
+  operation: CREATE, READ
+  resource: "org.asm.uk.laptopApproval"
+  action: ALLOW
+}
+
+//FOR TECHNICIAN
+rule TechnicianViewThemself{
+  description: "Technician can View Themself"
+  participant(p): "org.asm.uk.Technician"
+  operation: READ
+  resource(r): "org.asm.uk.Technician"
+  condition: (p.getIdentifier()==r.getIdentifier())
+  action: ALLOW
+}
+
+rule TechnicianPlacesBuyOrderTX{
+  description: "Technician places buy orders"
+  participant: "org.asm.uk.Technician"
+  operation: CREATE, READ
+  resource: "org.asm.uk.buyOrdertx"
+  action: ALLOW
+}
+
+rule TechnicianManipulateBuyOrder{
+  description: "Technician manipulate buy orders"
+  participant: "org.asm.uk.Technician"
+  operation: CREATE, READ
+  resource: "org.asm.uk.BuyOrder"
+  action: ALLOW
+}
+
+rule TechnicianManipulateLaptopOrders{
+  description: "Technician Manipulates LaptopOrders"
+  participant: "org.asm.uk.Technician"
+  operation: CREATE, READ, UPDATE
+  resource: "org.asm.uk.LaptopOrder"
+  action: ALLOW
+}
+rule TechnicianManipulateLaptopDetail{
+  description: "Technician Manipulates LaptopDetail"
+  participant: "org.asm.uk.Technician"
+  operation: CREATE, READ, UPDATE
+  resource: "org.asm.uk.LaptopDetail"
+  action: ALLOW
+}
+
+rule TechnicianConfigLaptopTX{
+  description: "Technician access configure laptop transaction"
+  participant: "org.asm.uk.Technician"
+  operation: CREATE, READ
+  resource: "org.asm.uk.configureOrder"
+  action: ALLOW
+}
+rule TechnicianPackageLaptopTX{
+  description: "Technician access package laptop transaction"
+  participant: "org.asm.uk.Technician"
+  operation: CREATE, READ
+  resource: "org.asm.uk.packageOrder"
+  action: ALLOW
+}
+rule TechnicianRepairLaptopTX{
+  description: "Technician access repair laptop transaction"
+  participant: "org.asm.uk.Technician"
+  operation: CREATE, READ
+  resource: "org.asm.uk.repairLaptop"
+  action: ALLOW
+}
+
+//FOR COMPANY
+rule CustomerAccessLaptopDetails {
+  description: "The customer should see all Laptop Details, but only when he has a relationship in Laptop Order"
+  participant(p): "org.asm.uk.Company"
+  operation: UPDATE, READ
+  resource(r): "org.asm.uk.LaptopDetail"
+  condition:  (p.getIdentifier() == r.orderId.consumerCompany.getIdentifier()) 
+  action: ALLOW
+}
+
+rule companySeeTheirOwnOrders{
+  description: "company can only see their own orders"
+  participant(p): "org.asm.uk.Company"
+  operation: CREATE, READ
+  resource(x): "org.asm.uk.LaptopOrder"
+  condition: (p.getIdentifier() == x.consumerCompany.getIdentifier())
+  action:ALLOW
+}
+
+rule companyreturnLaptopTX{
+  description: "company access to return laptop transaction"
+  participant: "org.asm.uk.Company"
+  operation: CREATE, READ
+  resource: "org.asm.uk.returnLaptop"
+  action: ALLOW
+}
+
+rule companySubmitOrderTX{
+  description: "company places order"
+  participant: "org.asm.uk.Company"
+  operation: CREATE, READ
+  resource: "org.asm.uk.placeLaptopOrder"
+  action: ALLOW
+}
+rule companySeeSelf{
+  description: "company see themselves"
+  participant(p): "org.asm.uk.Company"
+  operation: READ
+  resource(r): "org.asm.uk.Company"
+  condition: (p.getIdentifier()==r.getIdentifier())
+  action: ALLOW
+}
+
+rule companyCanPlaceOrder{
+  description: "company Can Place Order"
+  participant: "org.asm.uk.Company"
+  operation: CREATE, READ, UPDATE
+  resource: "org.asm.uk.LaptopOrder"
+  transaction: "org.asm.uk.placeLaptopOrder"
+  action: ALLOW
+}
+
+rule R3_ParticipantsSeeOwnHistoryOnly {
+  description: "Particiipants should be able to see the history of their own transactions only"
+  participant(t): "org.asm.uk.*"
+  operation: READ
+  resource(v): "org.hyperledger.composer.system.HistorianRecord"
+  condition: (v.participantInvoking.getIdentifier() != t.getIdentifier())
+  action: DENY
+}
+
+rule systemACL{
+  description: "system acl to permit all access"
+  participant: "ANY"
+  operation: ALL
+  resource: "org.hyperledger.composer.system.**"
+  action:ALLOW
+}
+
+rule NetworkAdminUser {
+    description: "Grant business network administrators full access to user resources"
+    participant: "org.hyperledger.composer.system.NetworkAdmin"
+    operation: ALL
+    resource: "**"
+    action: ALLOW
+}
+
+rule NetworkAdminSystem {
+    description: "Grant business network administrators full access to system resources"
+    participant: "org.hyperledger.composer.system.NetworkAdmin"
+    operation: ALL
+    resource: "org.hyperledger.composer.system.**"
+    action: ALLOW
+}

@@ -1,0 +1,254 @@
+namespace org.asm.uk
+
+/* for laptop lending order */
+enum STATUS {
+o ORDERED
+o CONFIGURED
+o READY_FOR_COLLECTION
+o DISPATCHED
+o DELIVERED
+o ORDER_CANCELLED
+}
+
+/* for technicians laptop buy order */
+
+enum buyOrderStatus {
+ o PENDING_APPROVAL
+ o APPROVED
+ o DECLINED
+}
+
+/* Laptop status */
+enum STATE {
+ o IN_STORAGE
+ o RENTED_OUT
+ o REPAIRS_REQUESTED
+ o RETURN_REQUESTED
+ o IN_REPAIRS
+ o REPAIRED
+ o RETURNED
+}
+
+/* Laptop specs */
+enum LaptopBrand {
+o DELL
+o HP
+o ASUS
+o ALIENWARE
+o APPLE
+o TOSHIBA
+o THINKPAD
+o ACER
+o GOOGLE
+o MICROSOFT
+o LENOVO
+}
+
+enum LaptopCPU {
+ o Intel_Core2Duo
+ o Intel_Corei3
+ o Intel_Corei5
+ o Intel_Corei7
+ o Intel_Corei9
+ o Ryzen_5
+ o Ryzen_7
+ o Ryzen_9
+ o Apple_M1
+ o Apple_M2
+ o Apple_M3
+}
+
+enum LaptopGPU {
+ o Nvidia
+ o AMD
+}
+
+enum LaptopStorage {
+ o Harddisk
+ o SSD
+}
+
+enum LaptopMemory {
+ o EightGigsStick
+ o SixteenGigsStick 
+}
+
+concept Address {
+  o String addressLine default="The Burroughs, North Hendon"
+  o String City default="London"
+  o String PostCode default="NW44HE"
+}
+concept Name {
+ 	o String name 
+}
+
+abstract concept Currency {
+	o String currency default="£"
+}
+concept Price extends Currency {
+	o Double price
+}
+
+  /*customer can spec out their laptop */
+concept specOutLaptop {
+   o LaptopBrand 	laptopBrand
+   o LaptopCPU	laptopCPU
+   o LaptopGPU	laptopGPU optional
+   o LaptopStorage laptopStorage
+   o LaptopMemory  laptopMemory  
+}
+  
+  /*technician will config laptop according to customers specs and fix a price*/
+asset LaptopDetail identified by LapId {
+  o String 		  LapId
+  o specOutLaptop laptopSpecs
+  o Price         laptopPrice
+  o Integer       quantity
+  o STATE         laptopState
+  --> LaptopOrder        orderId
+}
+
+asset LaptopOrder identified by orderId {
+  o String orderId
+  --> Company consumerCompany
+  o specOutLaptop specs 
+  o Integer quantity
+  o STATUS status  
+}
+  
+asset BuyOrder identified by buyId {
+  o String buyId
+  --> Technician orderHandler
+  o specOutLaptop specs
+  o Price laptopPrice
+  o Integer quantity
+  o buyOrderStatus status
+}
+
+  
+//PARTICIPANTS
+  
+participant Company identified by CompanyId {
+  o String CompanyId 
+  o Name name
+  o Address address
+}
+
+participant Accountant identified by tId {
+  o String tId 
+  o Name empName
+  o Address empAddress
+  o Price empSalary
+}
+  
+participant Technician identified by tId {
+  o String tId 
+  o Name empName
+  o Address empAddress
+  o Price empSalary
+}
+  
+participant Manager identified by mId {
+  o String mId 
+  o Name empName
+  o Address empAddress
+  o Price empSalary
+}
+  
+participant CEO identified by cId {
+  o String cId 
+  o Name empName
+}
+  
+//
+  
+/* a company places laptop order */
+transaction placeLaptopOrder{
+  o String orderId
+  --> Company consumerCompany
+  o Integer quantity
+  o specOutLaptop specs 
+}
+  
+/* a technician handles the order for customer specific configuration */
+transaction configureOrder {
+  o String LapId
+  --> LaptopOrder laptopConfigured
+  o Price         laptopPrice
+  o STATE         laptopState
+}
+
+event configureOrderEvent {
+  --> LaptopOrder laptopConfigured
+}
+  
+// technician packages the order
+transaction packageOrder {
+  --> LaptopOrder  laptopPackaged
+}
+  
+event packageOrderEvent {
+  --> LaptopOrder  laptopPackaged
+}
+  
+// manager puts the order for collection by the customer, laptop is rented out from storage
+transaction dispatchOrder {
+  --> LaptopOrder  laptopDispatched
+  --> LaptopDetail	laptopRentedOut
+}
+  
+event dispatchOrderEvent {
+  --> LaptopOrder  laptopDispatched
+  --> LaptopDetail	laptopRentedOut
+}
+
+// customer returns laptop, for replacement or repairs
+transaction returnLaptop {
+  --> LaptopDetail  returnLaptop 
+  o String returnReason
+}
+event returnLaptopEvent {
+  --> LaptopDetail  returnLaptop
+}
+  
+// manager approves request for replacement or repairs
+transaction laptopApproval {
+  --> LaptopDetail  laptopApproval
+}
+event laptopApprovalEvent {
+  --> LaptopDetail  laptopApproval
+}
+  
+//technician updates the state to REPAIRED once laptop is repaired
+transaction repairLaptop {
+  --> LaptopDetail  repairLaptop
+}
+event repairLaptopEvent {
+  --> LaptopDetail  repairLaptop
+}
+  
+//technician places buy order and it depends on CEO's approval
+transaction buyOrdertx {
+  o String buyId
+  --> Technician orderHandler
+  o specOutLaptop specs
+  o Price laptopPrice
+  o Integer quantity
+}
+  
+// CEO approves or declines buy Orders for the organization
+transaction buyOrderApproval {
+  --> BuyOrder  laptopApproval
+  o String decision
+}
+event buyOrderApprovalEvent {
+  --> BuyOrder  laptopApproval
+}
+ 
+// initialize
+transaction initializeALL {
+}
+  
+//OPTIONAL (NOT REQUIRED IN TRANS LOGIC)
+transaction initializeAsset {
+}
